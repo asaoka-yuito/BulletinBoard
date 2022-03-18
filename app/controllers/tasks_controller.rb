@@ -1,5 +1,9 @@
 class TasksController < ApplicationController
+  before_action :set_task, only: [:show, :edit, :update, :destroy]
+
   def index
+    #@tasks = Task.where(user_id: current_user.id)でも可能
+    @tasks = current_user.tasks.order(created_at: :desc)#上記でも可能
   end
 
   def show
@@ -12,46 +16,37 @@ class TasksController < ApplicationController
   def edit
   end
 
-  # def create
-  #   task = Task.new(task_params)
-  #   task.save!
-  #   redirect_to tasks_url,notice: "タスク『#{task.name}』を登録しました。"
-  # end
+  
 
   def create
-    task = Task.new(task_params)
-    task.save!
-    redirect_to tasks_url,notice: "タスク『#{task.name}』を登録しました。"
-  
+    #@task = Task.new(task_params.merge(user_id: current_user.id))
+    @task =current_user.tasks.new(task_params)#上記の書き方の２種類ある
+    if @task.save
+      
+      redirect_to @task,notice: "タスク『#{@task.name}』を登録しました。"
+    else
+      render :new                               
+    end
   end  
 
-  def index
-    @tasks = Task.all#dbからデータの取得するメソッドをインスタンス変数に代入
-  end
-
-  def show
-    @task = Task.find(params[:id])#dbからパラメーターを取得
-  end
-
-  def edit
-    @task = Task.find(params[:id])
-  end
-
   def update
-    task = Task.find(params[:id])
-    task.update!(task_params)
-    redirect_to tasks_url,notice: "タスク『#{task.name}』を更新しました。"
+    @task.update!(task_params)
+    redirect_to tasks_url,notice: "タスク『#{@task.name}』を更新しました。"
   end
 
   def destroy
-    task = Task.find(params[:id])
-    task.destroy
-    redirect_to tasks_url,notice: "タスク『#{task.name}』を削除しました。"
+    @task.destroy
+    redirect_to tasks_url,notice: "タスク『#{@task.name}』を削除しました。"
   end
 
+  
   private
   
   def task_params
     params.require(:task).permit(:name, :description)
+  end
+
+  def set_task
+    @task = current_user.tasks.find(params[:id])
   end
 end
